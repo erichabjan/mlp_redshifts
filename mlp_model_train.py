@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from astropy.io import fits
 from astropy.table import Table
+from astropy.table import vstack
 
 ### ML pacakges
 from scipy import stats
@@ -79,7 +80,7 @@ def model_func(hp):
     for i in range(hp.Int(f"layers", min_value=1, max_value=5)):
         model.add(tf.keras.layers.Dense(units=hp.Int(f"neurons_{i}", min_value=10, max_value=600), activation='relu', kernel_regularizer='l2'))
 
-        drop = hp.Float(f"dropout_{i}", min_value=0.05, max_value=0.8)
+        drop = hp.Float(f"dropout_{i}", min_value=0.01, max_value=0.3)
         model.add(tf.keras.layers.Dropout(rate=drop))
     
     model.add(tf.keras.layers.Dense(1, activation = None))
@@ -95,11 +96,13 @@ def model_func(hp):
 
 ### Optimization code with Hyperband
 
+hyperband_dirc = '/home/habjan.e/SuperBIT_code/Redshift_ml/Sandbox_notebooks/mlp_redshift_dirc'
+
 tuner = kt.Hyperband(
     model_func,
     objective=kt.Objective('val_mean_absolute_error', direction='min'),  # for regression
     factor=10,
-    directory='mlp_redshift_dirc',
+    directory=hyperband_dirc,
     project_name='intro_to_kt'
 )
 
@@ -117,7 +120,7 @@ best_hps=tuner.get_best_hyperparameters(num_trials=1)[0]
 
 ### Define a check point callback
 
-path = '/home/habjan.e/SuperBIT_code/Redshift_ml/mlp_redshift.keras'
+path = '/home/habjan.e/SuperBIT_code/Redshift_ml/mlp_redshifts/mlp_redshift.keras'
 
 checkpoint = tf.keras.callbacks.ModelCheckpoint(
     path, 
